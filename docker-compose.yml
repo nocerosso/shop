@@ -1,22 +1,57 @@
 services:
-    web:
-        image: nginx:latest
-        ports:
-            - "3000:80"
-        volumes:
-            - ./src:/var/www/html
-            - ./default.conf:/etc/nginx/conf.d/default.conf
-        links:
-            - php-fpm
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.shop.entrypoints=websecure"
-            - "traefik.http.routers.shop.tls.certResolver=letsencrypt"
-            - "traefik.http.routers.shop.rule=Host(`shop.envysartorialist.it`)"
-            - "traefik.http.services.shop.loadbalancer.server.port=3000" 
+  ngnix:
+    image: nginx:latest
+      ports:
+        - 3000
+      networks:
+        - dokploy-network
+      volumes:
+        - "./ngnix/src:/var/www/html"
+        - "./ngnix/default.conf:/etc/nginx/conf.d/default.conf"
+      links:
+        - php-fpm
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.shop.entrypoints=websecure"
+        - "traefik.http.routers.shop.tls.certResolver=letsencrypt"
+        - "traefik.http.routers.shop.rule=Host(`shop.envysartorialist.it`)"
+        - "traefik.http.services.shop.loadbalancer.server.port=3000" 
 
+  php-fpm:
+    build: docker/php-fpm
+    volumes:
+      - "./src:/var/www/html"
+    networks:
+      - dokploy-network
+networks:
+  dokploy-network:
+    external: true
 
-    php-fpm:
-        build: docker/php-fpm
-        volumes:
-            - ./src:/var/www/html
+# networks:
+#   dokploy-network:
+#     external: true
+
+# version: "3"
+ 
+# services:
+#   next-app:
+#     build:
+#       context: ./next-app
+#       dockerfile: prod.Dockerfile
+#       args:
+#         ENV_VARIABLE: ${ENV_VARIABLE}
+#         NEXT_PUBLIC_ENV_VARIABLE: ${NEXT_PUBLIC_ENV_VARIABLE}
+#     restart: always
+#     ports:
+#       - 3000
+#     networks:
+#       - dokploy-network
+#     labels:
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.<unique-name>.rule=Host(`your-domain.com`)"
+#       - "traefik.http.routers.<unique-name>.entrypoints=websecure"
+#       - "traefik.http.routers.<unique-name>.tls.certResolver=letsencrypt"
+#       - "traefik.http.services.<unique-name>.loadbalancer.server.port=3000"
+# networks:
+#   dokploy-network:
+#     external: true
